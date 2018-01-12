@@ -164,7 +164,8 @@ class Report1288(object):
                  setup=None,
                  basic=None,
                  marketing=None,
-                 cover_page=False):
+                 cover_page=False,
+                 extra_info=False):
         """Report generator init method.
 
         Informations stored in the report can be specified by the kwargs
@@ -197,6 +198,9 @@ class Report1288(object):
         cover_page : str, optional
                      The path to the cover page for the report. If False,
                      no cover page will be included in the report.
+        extra_info : str, optional
+                     The path to extra information to be appended to the
+                     report. If False, no extra info will be included.
         """
         self._outdir = os.path.abspath(outdir)
 
@@ -206,6 +210,7 @@ class Report1288(object):
         self.basic = basic or info_basic()
         self.setup = setup or info_setup()
         self.cover_page = cover_page
+        self.extra_info = extra_info
         self._make_dirs(outdir)
 
     @staticmethod
@@ -278,26 +283,29 @@ class Report1288(object):
             os.makedirs(upload_dir)
         except FileExistsError:  # pragma: no cover
             pass
+        marketing = self.marketing
 
-        def uploaded_file(fname, default):
-            if fname:  # pragma: no cover
-                shutil.copy(os.path.abspath(fname), upload_dir)
-                v = posixpath.join(
-                    'upload',
-                    os.path.basename(fname))
-            else:
-                v = posixpath.join('files', default)
-            return v
-
-        self.marketing['logo'] = uploaded_file(self.marketing['logo'],
+        marketing['logo'] = self.uploaded_file(upload_dir,
+                                               marketing['logo'],
                                                'missinglogo.pdf')
 
-        self.marketing['missingplot'] = uploaded_file(
-            self.marketing['missingplot'],
-            'missingplot.pdf')
+        marketing['missingplot'] = self.uploaded_file(upload_dir,
+                                                      marketing['missingplot'],
+                                                      'missingplot.pdf')
 
-        self.basic['qe_plot'] = uploaded_file(self.basic['qe_plot'],
-                                              'missingplot.pdf')
+        self.basic['qe_plot'] = self.uploaded_file(upload_dir,
+                                                   self.basic['qe_plot'],
+                                                   'missingplot.pdf')
+
+    def uploaded_file(self, upload_dir, fname, default):
+        if fname:  # pragma: no cover
+            shutil.copy(os.path.abspath(fname), upload_dir)
+            v = posixpath.join(
+                'upload',
+                os.path.basename(fname))
+        else:
+            v = posixpath.join('files', default)
+        return v
 
     def _write_file(self, name, content):
         # write content into a file
@@ -319,7 +327,8 @@ class Report1288(object):
                              basic=self.basic,
                              setup=self.setup,
                              operation_points=self.ops,
-                             cover_page=self.cover_page)
+                             cover_page=self.cover_page,
+                             extra_info=self.extra_info)
 
     def latex(self):
         """Generate report latex files.

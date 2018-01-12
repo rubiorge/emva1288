@@ -134,7 +134,6 @@ class LoadImageData(object):
             if not os.path.isfile(filename):
                 # If the path is not good, raise an error.
                 raise IOError('Not such file: ' + filename)
-
             # If path is good, load the image using the fload function
             img = self._fload(filename,
                               *self._fload_args,
